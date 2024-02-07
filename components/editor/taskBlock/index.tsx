@@ -1,33 +1,36 @@
+/* eslint-disable react/no-unescaped-entities */
 import {
   BlockSchema,
   defaultProps,
   PartialBlock,
   PropSchema,
-} from '@blocknote/core'
-import { createReactBlockSpec, InlineContent } from '@blocknote/react'
-import React, { useEffect, useRef } from 'react'
-import { insertOrUpdateBlock } from '../../../lib/editor'
+} from "@blocknote/core";
+import { createReactBlockSpec, InlineContent } from "@blocknote/react";
+import React, { useEffect, useRef } from "react";
+import { insertOrUpdateBlock } from "../../../lib/editor";
 
 type Task = {
+  title: {
+    default: string;
+  };
   isDone: {
-    default: boolean
-  }
+    default: boolean;
+  };
   users: {
-    default: { name: string; url: string }[]
-  }
-}
+    default: { name: string; url: string }[];
+  };
+};
 
 const CustomCheckbox = ({ checked }: { checked: boolean }) =>
   checked ? (
     <p className="ri-checkbox-line  text-lg">-</p>
   ) : (
     <p className="ri-checkbox-blank-line text-lg">+</p>
-  )
+  );
 
-// const taskSchema: Partial<PropSchema> & Partial<Task> = {
-const taskSchema: any = {
+const taskSchema: Partial<Task> = {
   title: {
-    default: '',
+    default: "",
   },
   isDone: {
     default: false,
@@ -35,47 +38,50 @@ const taskSchema: any = {
   users: {
     default: [],
   },
-}
+};
 
 const TaskBlock = createReactBlockSpec({
-  type: 'task',
+  type: "task",
   propSchema: {
     ...defaultProps,
     ...(taskSchema as PropSchema),
   },
   containsInlineContent: true,
   render: ({ block, editor }) => {
+    const { props, content } = block as any;
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
       const handler = (e: KeyboardEvent) => {
-        const prevBlock = editor.getTextCursorPosition().prevBlock as any
-        const nextBlock = editor.getTextCursorPosition().nextBlock as any
+        const prevBlock = editor.getTextCursorPosition().prevBlock as any;
+        const nextBlock = editor.getTextCursorPosition().nextBlock as any;
 
         switch (e.key) {
-          case 'Enter':
-            if (prevBlock?.type === 'task' && prevBlock?.content?.[0]?.text) {
+          case "Enter":
+            if (prevBlock?.type === "task" && prevBlock?.content?.[0]?.text) {
               insertOrUpdateBlock(editor, {
-                type: 'task',
-              } as PartialBlock<BlockSchema>)
-              return
+                type: "task",
+              } as PartialBlock<BlockSchema>);
+              return;
             }
-          case 'Backspace':
+          case "Backspace":
             if (prevBlock?.content?.[0]?.text) {
-              document.removeEventListener('keydown', handler)
-              return
+              document.removeEventListener("keydown", handler);
+              return;
             }
           default:
-            return
+            return;
         }
-      }
+      };
 
-      document.removeEventListener('keydown', handler)
-      document.addEventListener('keydown', handler)
+      document.removeEventListener("keydown", handler);
+      document.addEventListener("keydown", handler);
 
-      return () => document.removeEventListener('keydown', handler)
-    }, [])
+      return () => document.removeEventListener("keydown", handler);
+    }, []);
 
     const isBlockActive =
-      block === (editor.getTextCursorPosition().block as any)
+      block === (editor.getTextCursorPosition().block as any);
 
     return (
       <div className="relative flex gap-4 items-center" tabIndex={0}>
@@ -87,21 +93,21 @@ const TaskBlock = createReactBlockSpec({
         <div
           onClick={() =>
             editor.updateBlock(block, {
-              props: { isDone: !block.props.isDone } as any,
+              props: { isDone: !props.isDone } as any,
             })
           }
         >
-          <CustomCheckbox checked={block.props.isDone} />
+          <CustomCheckbox checked={props.isDone} />
         </div>
         <InlineContent as="div" />
-        {!block?.content[0]?.text && isBlockActive ? (
+        {!content[0]?.text && isBlockActive ? (
           <div className="absolute left-9 text-gray-300 flex items-center italic">
             Enter a text or type '@' to mention user
           </div>
         ) : null}
       </div>
-    )
+    );
   },
-})
+});
 
-export default TaskBlock
+export default TaskBlock;
